@@ -1,0 +1,48 @@
+/* Self-contained settings styling, shared by the plugin page and quick panel. */
+.stillcord-settings { --sc-bg:#101113; --sc-line:rgb(255 255 255 / 8%); --sc-soft:#9b9ca3; --sc-text:#ededf0; color:var(--sc-text); font:14px/1.5 var(--still-font,system-ui); max-width:800px; margin:0 auto; padding:28px; box-sizing:border-box; }
+.stillcord-settings * {box-sizing:border-box;}
+.sc-settings-header {display:flex;align-items:center;gap:16px;}
+.sc-mark {display:grid;place-items:center;width:48px;height:48px;flex:none;border-radius:16px;border:1px solid #666;background:linear-gradient(145deg,#3e4045,#121315 65%);box-shadow:inset 0 1px 0 #ffffff40;font-size:25px;letter-spacing:-3px;padding-right:3px;}
+.sc-eyebrow {font-size:9px;letter-spacing:.18em;color:var(--sc-soft);}
+.sc-settings-header h2 {font-size:32px;letter-spacing:-1.3px;line-height:1.15;font-weight:550;margin:4px 0 0;}
+.sc-version {margin-left:auto;font-size:11px;color:var(--sc-soft);border:1px solid var(--sc-line);border-radius:20px;padding:4px 10px;}
+.sc-settings-intro {color:var(--sc-soft);margin:20px 0 24px;}
+.sc-tabs {display:flex;gap:4px;padding:5px;background:#08090a;border:1px solid var(--sc-line);border-radius:16px;margin-bottom:22px;}
+.stillcord-settings button {font:inherit;cursor:pointer;}
+.sc-tab {flex:1;min-width:0;border:1px solid transparent;border-radius:11px;background:transparent;color:var(--sc-soft);padding:9px 8px;white-space:nowrap;font-size:12px!important;}
+.sc-tab[aria-selected="true"] {color:#f2f2f4;border-color:#ffffff13;background:linear-gradient(150deg,#303136,#1c1d20);box-shadow:inset 0 1px 0 #ffffff0d;}
+.sc-tab-panel[hidden] {display:none!important;}
+.sc-tab-panel {display:grid;gap:14px;}
+.sc-card {background:linear-gradient(145deg,#ffffff04,transparent 55%),var(--sc-bg);border:1px solid var(--sc-line);border-top-color:#ffffff19;border-radius:20px;padding:20px 22px;}
+.sc-card h3 {font-size:15px;font-weight:550;letter-spacing:-.2px;margin:0 0 8px;}
+.sc-card-note {font-size:12px;color:var(--sc-soft);margin:0 0 10px;}
+.sc-setting {display:flex;align-items:center;justify-content:space-between;gap:24px;padding:14px 0;border-bottom:1px solid #ffffff07;}
+.sc-setting:last-child {border-bottom:0;padding-bottom:2px;}
+.sc-setting-copy {min-width:0;cursor:pointer;}
+.sc-setting-name,.sc-setting-note {display:block;}
+.sc-setting-name {font-size:13px;font-weight:500;}
+.sc-setting-note {font-size:11px;color:var(--sc-soft);margin-top:3px;line-height:1.45;max-width:46ch;}
+.sc-switch {appearance:none!important;-webkit-appearance:none!important;width:34px!important;height:20px!important;min-width:34px;flex:none;border:1px solid #ffffff18;border-radius:20px;background:#303136;position:relative;cursor:pointer;}
+.sc-switch::before {content:"";position:absolute;left:3px;top:3px;width:12px;height:12px;border-radius:50%;background:#9799a0;transition:transform 100ms ease-out;}
+.sc-switch:checked {background:#d7d8db;border-color:#ececef;}
+.sc-switch:checked::before {background:#25262a;transform:translateX(14px);}
+.sc-select,.sc-zip {font:inherit!important;color:var(--sc-text)!important;border:1px solid #ffffff15!important;background:#08090b!important;border-radius:10px!important;padding:9px 12px!important;outline:none;}
+.sc-select {font-size:12px!important;max-width:160px;min-width:128px;}
+.sc-color {border:1px solid #ffffff20;border-radius:10px;background:#17181b;width:38px;height:30px;padding:3px;cursor:pointer;}
+.stillcord-settings :is(button,input,select):focus-visible {outline:2px solid #d1d3df;outline-offset:3px;}
+.stillcord-settings :is(button,input):disabled {opacity:.45;cursor:wait;}
+.sc-location-label {display:block;color:var(--sc-soft);font-size:11px;margin-top:16px;margin-bottom:7px;}
+.sc-location-fields {display:flex;gap:10px;}
+.sc-zip {width:140px;letter-spacing:.08em;}
+.sc-primary {border:1px solid #ececef;border-radius:11px;color:#17181b;background:#e1e2e5;padding:9px 16px;font-size:12px!important;font-weight:550!important;}
+.sc-location-status {font-size:12px;margin:12px 0 3px;color:#c6c7cf;}
+.sc-location-status[data-error] {color:#f4b5b5;}
+.sc-privacy {font-size:10px;color:#777a83;line-height:1.6;margin:14px 0 0;}
+.sc-settings-footer {display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:20px;font-size:10px;color:#777a83;}
+.sc-text-button {border:0;background:transparent;color:var(--sc-soft);font-size:10px!important;padding:5px 0;}
+#stillcord-settings-dialog {padding:0;border:1px solid #ffffff22;border-radius:28px;background:#0b0c0f;color:#ededf0;width:min(800px,calc(100vw - 40px));max-height:calc(100vh - 48px);box-shadow:0 24px 90px #000b;overflow:auto;scrollbar-width:thin;}
+#stillcord-settings-dialog::backdrop {background:rgb(0 0 0 / 65%);}
+#stillcord-settings-dialog .sc-settings-close {position:sticky;float:right;right:18px;top:18px;margin:14px 14px -42px 0;z-index:3;width:28px;height:28px;border:1px solid #ffffff20;border-radius:50%;background:#222327;color:#bbb;font:18px system-ui;cursor:pointer;}
+#stillcord-settings-dialog .sc-version {margin-right:30px;}
+@media(max-width:620px){.stillcord-settings{padding:20px 16px;}.sc-tab{font-size:10px!important;padding:8px 4px;}.sc-card{padding:16px;}.sc-setting{gap:12px;}.sc-setting-note{max-width:32ch;}.sc-select{min-width:108px;width:108px;}}
+@media(prefers-reduced-motion:reduce){.sc-switch::before{transition:none;}}
