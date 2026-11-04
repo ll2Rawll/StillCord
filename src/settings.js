@@ -5,7 +5,7 @@ function stillSettingsPanel(plugin) {
     const root=el('section','stillcord-settings'); root.setAttribute('aria-label','StillCord settings');
     const header=el('header','sc-settings-header'), mark=el('span','sc-mark','S'); mark.setAttribute('aria-hidden','true');
     const brand=el('div');brand.append(el('div','sc-eyebrow','YOUR DISCORD, QUIETLY REFINED'),el('h2','','StillCord'));
-    header.append(mark,brand,el('span','sc-version','3.0'));root.append(header);
+    header.append(mark,brand,el('span','sc-version','3.1'));root.append(header);
     root.append(el('p','sc-settings-intro','A little less noise. A little more you.'));
     const tabs=el('div','sc-tabs');tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Settings category');root.append(tabs);
     const panels=new Map(),buttons=[];

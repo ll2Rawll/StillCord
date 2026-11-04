@@ -1,7 +1,7 @@
 /**
  * @name StillCord
  * @author ll2Rawll
- * @version 3.0.0
+ * @version 3.1.0
  * @description An integrated OLED glass theme, minimal workspace, widgets and thoughtful motion.
  * @website https://github.com/ll2Rawll/StillCord
  * @source https://github.com/ll2Rawll/StillCord/blob/main/StillCord.plugin.js
@@ -97,13 +97,12 @@ function stillAttribute(node, name, value) {
     if (node.getAttribute(name) !== text) node.setAttribute(name, text);
 }
 
-module.exports = class StillCord {
+class StillCord {
+    constructor(api) { this.api = api; }
+
     start() {
         if (this.running) return;
-        this.api = new BdApi("StillCord");
-        this.migrateLegacy();
-        if (BdApi.Plugins?.isEnabled("StillSpeed")) BdApi.Plugins.disable("StillSpeed");
-        if (BdApi.Themes?.isEnabled("Still")) BdApi.Themes.disable("Still");
+        this.api.prepare?.();
         this.location = stillLocation(this.api.Data.load("location"));
         this.styleCache = new Map();
         this.settings = normalizedSettings(this.api.Data.load("settings"));
@@ -461,15 +460,6 @@ module.exports = class StillCord {
         else this.apply();
     }
 
-    migrateLegacy() {
-        if (this.api.Data.load("settings") !== undefined) return;
-        const old = new BdApi("StillSpeed");
-        for (const key of ["settings", "browseOpen", "channelControlsVisible", "activityDraft", "browseRecentGuilds", "browsePosition", "widgetsCollapsed"]) {
-            const value = old.Data.load(key);
-            if (value !== undefined) this.api.Data.save(key, value);
-        }
-    }
-
     async setLocation(zip) {
         if (!this.running) throw new Error("Enable StillCord before updating your location.");
         this.locationAbort?.abort();
@@ -507,8 +497,7 @@ module.exports = class StillCord {
 // so ResizeObserver cannot feed back into layout. No polling or content scanning.
 /* A small local directory over Discord's stores. Native channel, voice and
    account controls stay mounted; no DOM polling or replacement of React nodes. */
-/* Uses the native LOCAL_ACTIVITY_UPDATE event through BetterDiscord's module
-   API (https://docs.betterdiscord.app/discord/modules/flux-events). Activity is
+/* Uses Discord's native LOCAL_ACTIVITY_UPDATE event through the host API. Activity is
    published only on an explicit form submit, never on input or startup. */
 class StillActivity {
     constructor(plugin) {
@@ -1562,20 +1551,14 @@ class StillWorkspace {
     }
 
     async startMedia() {
-        if (this.mediaSession || this.mediaRetry || typeof require !== "function" || !this.api.Net?.fetch) return;
+        if (this.mediaSession || this.mediaRetry || !this.api.Media) return;
         const session = {}; this.mediaSession = session;
         try {
-            const config = JSON.parse(require("fs").readFileSync(require("path").join(BdApi.Plugins.folder, "StillMediaBridge.json"), "utf8"));
-            if (!Number.isInteger(config.port) || config.port < 1024 || config.port > 65535 || !/^[a-f0-9]{64}$/.test(config.key)) throw Error("Invalid media setup");
-            this.mediaEndpoint = `http://127.0.0.1:${config.port}`;
-            this.mediaHeaders = {Authorization: `Bearer ${config.key}`};
             let revision = -1;
             while (this.visible() && this.mediaSession === session) {
                 const abort = new AbortController(); this.mediaAbort = abort;
                 const startedAt = Date.now();
-                const response = await this.api.Net.fetch(`${this.mediaEndpoint}/state?after=${revision}`, {headers: this.mediaHeaders, signal: abort.signal, timeout: 30000, redirect: "error"});
-                if (!response.ok) throw Error("Media service unavailable");
-                const data = await response.json();
+                const data = await this.api.Media.read(revision, abort.signal);
                 if (this.mediaSession !== session || !this.visible()) break;
                 if (!Number.isFinite(data.revision) || !data.state || typeof data.state.available !== "boolean") throw Error("Invalid media state");
                 // An unchanged response should be held by the service. Back off
@@ -1597,10 +1580,9 @@ class StillWorkspace {
         clearTimeout(this.mediaRetry); this.mediaRetry = 0;
     }
     async mediaCommand(command) {
-        if (!["toggle", "previous", "next"].includes(command) || !this.mediaEndpoint || !this.visible()) return;
+        if (!["toggle", "previous", "next"].includes(command) || !this.api.Media || !this.visible()) return;
         try {
-            const response = await this.api.Net.fetch(this.mediaEndpoint + "/control", {method: "POST", headers: {...this.mediaHeaders, "Content-Type": "application/json"}, body: JSON.stringify({command}), timeout: 5000, redirect: "error"});
-            if (!response.ok) throw Error("Unavailable");
+            await this.api.Media.command(command);
         } catch { this.api.UI?.showToast("This player is unavailable. Try again when media is playing.", {type: "info"}); }
     }
     renderMedia() {

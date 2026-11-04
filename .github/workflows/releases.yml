@@ -1,0 +1,65 @@
+name: Validate and publish both editions
+on:
+  push:
+    branches: [main]
+    paths: [release.json, .github/workflows/releases.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: stillcord-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Build and test StillCord
+        run: |
+          npm ci
+          npm run build
+          npm run check
+          npm test
+          git diff --exit-code -- StillCord.plugin.js vencord/
+      - name: Build against the pinned Vencord version
+        run: |
+          npm install --global pnpm@12.15.0
+          ref=$(node -p "require('./release.json').vencordRef")
+          git clone --filter=blob:none https://github.com/Vendicated/Vencord.git /tmp/stillcord-vencord
+          git -C /tmp/stillcord-vencord checkout "$ref"
+          mkdir -p /tmp/stillcord-vencord/src/userplugins
+          cp -R vencord/stillCord /tmp/stillcord-vencord/src/userplugins/
+          cd /tmp/stillcord-vencord
+          pnpm install --frozen-lockfile
+          pnpm build --dev
+          pnpm test:ts
+      - name: Package the two editions
+        run: python3 scripts/package-release.py
+      - name: Publish separate releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./release.json').version")
+          for client in betterdiscord vencord; do
+            tag="$client-v$version"
+            if gh release view "$tag" >/dev/null 2>&1; then
+              echo "Release $tag already exists; leaving it unchanged."
+              continue
+            fi
+            if [ "$client" = betterdiscord ]; then
+              name=BetterDiscord
+              assets=("dist/StillCord.plugin.js" "dist/StillCord-BetterDiscord-$version.zip" "dist/SHA256SUMS.txt")
+            else
+              name=Vencord
+              assets=("dist/StillCord-Vencord-$version.zip" "dist/SHA256SUMS.txt")
+            fi
+            gh release create "$tag" "${assets[@]}" --target "$GITHUB_SHA" --title "StillCord $version · $name" --notes-file "docs/release-$client.md" --latest=false
+          done
