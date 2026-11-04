@@ -1,0 +1,51 @@
+/* Static vector paint, animated only with transforms and opacity. */
+#still-restless-backdrop {display:none;position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;color:var(--sr-tint,#d3d9e4);background:var(--still-base);contain:strict;}
+html.sr-live #still-restless-backdrop {display:block;}
+html.sr-live :is(#app-mount,#app-mount [class^="app_"],[data-still-shell],[class^="bg_"]) {background:transparent!important;}
+html.sr-live :is([class*="contentRegion_"],[class*="contentRegionScroller_"],[class*="userSettingsContentPanel_"],[class*="pageBody_"],[class*="peopleColumn_"]) {background:color-mix(in srgb,var(--still-base) 52%,transparent)!important;}
+html.sr-live #app-mount {isolation:isolate;}
+.sr-depth-layer {position:absolute;inset:-2%;opacity:var(--sr-strength,.55);transition:transform 650ms cubic-bezier(.2,.75,.25,1);}
+.sr-artwork {position:absolute;inset:0;}
+.sr-field {position:absolute;inset:-7%;transform-origin:62% 48%;pointer-events:none;animation:sr-art-drift var(--sr-cycle) ease-in-out infinite alternate;}
+.sr-field svg {width:100%;height:100%;display:block;}
+.sr-field-1 {animation-name:sr-art-counter;animation-duration:calc(var(--sr-cycle)*1.25);}
+.sr-field-2 {animation-name:sr-art-glimmer;animation-duration:calc(var(--sr-cycle)*.9);}
+#still-restless-backdrop[data-scene="silk"] .sr-field-1 {opacity:.75;}
+#still-restless-backdrop:is([data-scene="orbit"],[data-scene="eclipse"]) .sr-field {animation:sr-celestial-drift var(--sr-cycle) ease-in-out infinite alternate;}
+#still-restless-backdrop[data-scene="aurora"] .sr-field {animation-name:sr-curtain-drift;}
+#still-restless-backdrop[data-scene="aurora"] .sr-field-1 {animation-delay:-9s;}
+#still-restless-backdrop[data-scene="aurora"] .sr-field-2 {animation-delay:-18s;}
+#still-restless-backdrop[data-scene="prism"] .sr-field {animation-name:sr-prism-drift;}
+#still-restless-backdrop[data-scene="prism"] .sr-field-1 {animation-delay:-5s;}
+#still-restless-backdrop[data-scene="contour"] .sr-field-1 {opacity:.6;}
+@keyframes sr-art-drift {from{transform:translate3d(-2%,-3%,0) rotate(-3deg) scale(1.02);}to{transform:translate3d(2%,3%,0) rotate(3deg) scale(1.08);}}
+@keyframes sr-art-counter {from{transform:translate3d(3%,2%,0) rotate(3deg);}to{transform:translate3d(-3%,-2%,0) rotate(-2deg) scale(1.04);}}
+@keyframes sr-art-glimmer {from{opacity:.5;transform:translate3d(-2%,0,0);}to{opacity:1;transform:translate3d(2%,1%,0);}}
+@keyframes sr-celestial-drift {from{transform:translate3d(-1%,-1%,0) rotate(-1deg) scale(.99);}to{transform:translate3d(1%,1%,0) rotate(1deg) scale(1.03);}}
+@keyframes sr-curtain-drift {from{transform:translate3d(-5%,3%,0) skewX(-4deg);opacity:.65;}to{transform:translate3d(5%,-3%,0) skewX(4deg);opacity:1;}}
+@keyframes sr-prism-drift {from{transform:translate3d(-1%,-2%,0) rotate(-2deg);}to{transform:translate3d(1%,2%,0) rotate(2deg);}}
+
+.sr-atmosphere-layer {position:absolute;inset:0;opacity:var(--sr-flair,.65);pointer-events:none;overflow:hidden;}
+.sr-atmosphere-layer > div {position:absolute;pointer-events:none;display:none;}
+.sr-star-sheet {inset:-4%;opacity:.55;animation:sr-stars-drift calc(var(--sr-cycle)*2) ease-in-out infinite alternate;}
+.sr-star-sheet svg,.sr-caustic-sheet svg {width:100%;height:100%;}
+.sr-caustic-sheet {inset:-12%;opacity:.12;transform-origin:65% 60%;animation:sr-caustic-drift calc(var(--sr-cycle)*1.6) ease-in-out infinite alternate;}
+.sr-meteor {width:200px;height:1px;left:65%;top:5%;opacity:0;rotate:-34deg;background:linear-gradient(90deg,transparent,var(--sr-tint));box-shadow:0 0 5px color-mix(in srgb,var(--sr-tint) 30%,transparent);animation:sr-meteor-pass 21s linear infinite;}
+.sr-meteor-b {left:25%;top:35%;width:120px;animation-delay:9s;animation-duration:29s;}
+.sr-grain-sheet {inset:0;opacity:.1;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cg fill='%23fff' opacity='.5'%3E%3Cpath d='M4 9h1v1H4zM31 5h1v1h-1zM61 23h1v1h-1zM83 7h1v1h-1zM13 42h1v1h-1zM47 49h1v1h-1zM72 64h1v1h-1zM9 79h1v1H9zM36 87h1v1h-1zM91 93h1v1h-1zM86 36h1v1h-1zM54 76h1v1h-1z'/%3E%3C/g%3E%3C/svg%3E");}
+.sr-vignette-sheet {inset:0;background:radial-gradient(ellipse at 56% 44%,transparent 25%,rgb(0 0 0 / 25%) 75%,rgb(0 0 0 / 75%));}
+html.sr-constellations .sr-star-sheet,html.sr-caustics .sr-caustic-sheet,html.sr-meteors .sr-meteor,html.sr-grain .sr-grain-sheet,html.sr-vignette .sr-vignette-sheet {display:block;}
+@keyframes sr-stars-drift {from{transform:translate3d(-1%,1%,0);opacity:.35;}to{transform:translate3d(1%,-1%,0);opacity:.65;}}
+@keyframes sr-caustic-drift {from{transform:rotate(-16deg) scale(.95);}to{transform:rotate(16deg) scale(1.05);}}
+@keyframes sr-meteor-pass {0%,91%{opacity:0;transform:translateX(0) scaleX(.3);}92%{opacity:.65;}97%,100%{opacity:0;transform:translateX(-650px) scaleX(1);}}
+
+/* One moving paint group preserves all scene detail on smaller GPUs. Static
+   reflections and stars stay visible, without more full-window surfaces. */
+html.sr-efficient .sr-artwork {animation:sr-celestial-drift var(--sr-cycle) ease-in-out infinite alternate;}
+html.sr-efficient #still-restless-backdrop :is(.sr-field,.sr-star-sheet,.sr-caustic-sheet) {animation:none!important;}
+html.sr-efficient :is([data-still-sidebar],[data-still-header],.still-widget,#stillspeed-activity-editor,#stillspeed-air-controls,[class*="membersWrap_"]) {backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+html.sr-still #still-restless-backdrop * {animation:none!important;}
+html.sr-still .sr-depth-layer {transition:none!important;}
+html.sr-paused #still-restless-backdrop * {animation-play-state:paused!important;}
+html.sr-paused .sr-depth-layer {transition:none!important;}
+@media(prefers-reduced-motion:reduce){html.sr-system-motion #still-restless-backdrop *{animation:none!important;}}

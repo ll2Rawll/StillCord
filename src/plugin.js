@@ -1,7 +1,7 @@
 /**
  * @name StillCord
  * @author ll2Rawll
- * @version 3.2.0
+ * @version 3.3.0
  * @description An integrated OLED glass theme, minimal workspace, widgets and thoughtful motion.
  * @website https://github.com/ll2Rawll/StillCord
  * @source https://github.com/ll2Rawll/StillCord/blob/main/StillCord.plugin.js
@@ -20,8 +20,11 @@ const DEFAULTS = Object.freeze({
     restlessLive: true,
     restlessScene: "silk",
     restlessTint: "#d3d9e4",
+    restlessSecondary: "#89939f",
+    restlessEnergy: 65,
     restlessStrength: 45,
     restlessTempo: "balanced",
+    restlessQuality: "efficient",
     restlessRespectMotion: true,
     ...Object.fromEntries(STILL_RESTLESS_FEATURES.map(([key]) => [key, true])),
     readingMode: true,
@@ -87,10 +90,13 @@ function normalizedSettings(saved) {
     if (Object.hasOwn(STAR_VEILS, saved.starIntensity)) next.starIntensity = saved.starIntensity;
     if (["satin", "stars"].includes(saved.backgroundStyle)) next.backgroundStyle = saved.backgroundStyle;
     if (typeof saved.accent === "string" && /^#[0-9a-f]{6}$/i.test(saved.accent)) next.accent = saved.accent;
-    if (["silk", "orbit", "aurora"].includes(saved.restlessScene)) next.restlessScene = saved.restlessScene;
+    if (STILL_SCENES.some(([key])=>key===saved.restlessScene)) next.restlessScene = saved.restlessScene;
     if (["calm", "balanced", "vivid"].includes(saved.restlessTempo)) next.restlessTempo = saved.restlessTempo;
+    if (["efficient", "layered", "still"].includes(saved.restlessQuality)) next.restlessQuality = saved.restlessQuality;
     if (typeof saved.restlessTint === "string" && /^#[0-9a-f]{6}$/i.test(saved.restlessTint)) next.restlessTint = saved.restlessTint;
+    if (typeof saved.restlessSecondary === "string" && /^#[0-9a-f]{6}$/i.test(saved.restlessSecondary)) next.restlessSecondary = saved.restlessSecondary;
     if (Number.isFinite(saved.restlessStrength)) next.restlessStrength = Math.round(Math.max(15, Math.min(85, saved.restlessStrength)));
+    if (Number.isFinite(saved.restlessEnergy)) next.restlessEnergy = Math.round(Math.max(20, Math.min(100, saved.restlessEnergy)));
     for (const key of Object.keys(DEFAULTS)) {
         if (typeof DEFAULTS[key] === "boolean" && typeof saved[key] === "boolean") next[key] = saved[key];
     }
@@ -285,6 +291,7 @@ class StillCord {
     onSwitch() {
         if (!this.running) return;
         this.mountLayout();
+        this.restless?.channelChanged();
     }
 
     mountLayout() {
@@ -482,6 +489,14 @@ class StillCord {
         if (key.startsWith("restless") && key !== "restless") { this.syncRestless(); return; }
         if (["customLayout", "focusView", "pinNavigation", "movableBrowse", "activityEditor", "widgets", "clockWidget", "weatherWidget", "mediaWidget", "notificationsWidget", "fahrenheit", "clock24", "zipTime"].includes(key)) this.mountLayout();
         else this.apply();
+    }
+
+    setRestlessPreset(name) {
+        if(!this.running)return;
+        const next=stillRestlessPreset(this.settings,name);if(!next)return;
+        const wasEnabled=this.settings.restless;
+        this.settings=normalizedSettings(next);this.api.Data.save("settings",this.settings);
+        if(wasEnabled)this.syncRestless();else this.apply();
     }
 
     async setLocation(zip) {

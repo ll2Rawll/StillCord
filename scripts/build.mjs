@@ -3,7 +3,7 @@ const read = name => readFileSync(new URL('../src/' + name, import.meta.url),'ut
 const source = read('plugin.js');
 const header = source.slice(0, source.indexOf('*/') + 2);
 const body = source.slice(source.indexOf('*/') + 2);
-const runtime = `// Generated from the shared src/. Run npm run build to update.\nconst STILL_THEME = ${JSON.stringify(read('theme.css') + '\n' + read('settings.css') + '\n' + read('restless.css'))};\n${read('restless.js')}\n${read('location.js')}\n${read('settings.js')}\n${body}`;
+const runtime = `// Generated from the shared src/. Run npm run build to update.\nconst STILL_THEME = ${JSON.stringify(read('theme.css') + '\n' + read('settings.css') + '\n' + read('wallpapers.css') + '\n' + read('restless.css'))};\n${read('wallpapers.js')}\n${read('restless.js')}\n${read('location.js')}\n${read('settings.js')}\n${body}`;
 const bundle = `${header}\n\n${runtime}\n${read('betterdiscord.js')}\nmodule.exports = class extends StillCord { constructor() { super(); } start() { if (!this.running) this.api = stillBetterDiscordHost(); super.start(); } };\n`;
 writeFileSync(new URL('../StillCord.plugin.js',import.meta.url),bundle);
 console.log(`Built StillCord.plugin.js (${Buffer.byteLength(bundle)} bytes).`);
