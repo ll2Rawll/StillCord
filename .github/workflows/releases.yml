@@ -2,7 +2,7 @@ name: Validate and publish both editions
 on:
   push:
     branches: [main]
-    paths: [release.json, .github/workflows/releases.yml]
+    paths: [release.json, .github/workflows/releases.yml, 'package*.json', 'scripts/**', 'src/**', 'tests/**']
   workflow_dispatch:
 
 permissions:
