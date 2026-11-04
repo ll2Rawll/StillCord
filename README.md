@@ -6,7 +6,7 @@
 
 OLED glass · floating navigation · connected message bubbles · useful widgets
 
-[BetterDiscord release](https://github.com/ll2Rawll/StillCord/releases/tag/betterdiscord-v3.1.0) · [Vencord release](https://github.com/ll2Rawll/StillCord/releases/tag/vencord-v3.1.0) · [Previews](#six-ways-to-make-it-yours) · [Settings](#make-it-yours)
+[BetterDiscord release](https://github.com/ll2Rawll/StillCord/releases/tag/betterdiscord-v3.2.0) · [Vencord release](https://github.com/ll2Rawll/StillCord/releases/tag/vencord-v3.2.0) · [Previews](#six-ways-to-make-it-yours) · [Settings](#make-it-yours)
 
 </div>
 
@@ -16,8 +16,8 @@ StillCord brings a minimal, glass-inspired workspace to **BetterDiscord and Venc
 
 | Your client | Download | Install |
 | --- | --- | --- |
-| **BetterDiscord** | [Plugin + optional media helper](https://github.com/ll2Rawll/StillCord/releases/tag/betterdiscord-v3.1.0) | Drop `StillCord.plugin.js` into Plugins. |
-| **Vencord** | [Custom userplugin + optional media helper](https://github.com/ll2Rawll/StillCord/releases/tag/vencord-v3.1.0) | Add `stillCord` to `src/userplugins/` and rebuild Vencord. |
+| **BetterDiscord** | [Plugin + optional media helper](https://github.com/ll2Rawll/StillCord/releases/tag/betterdiscord-v3.2.0) | Drop `StillCord.plugin.js` into Plugins. |
+| **Vencord** | [Custom userplugin + optional media helper](https://github.com/ll2Rawll/StillCord/releases/tag/vencord-v3.2.0) | Add `stillCord` to `src/userplugins/` and rebuild Vencord. |
 
 Choose the edition for your client. Vencord custom plugins require a source build; the Vencord ZIP is not a standalone installer or an official catalog plugin.
 
@@ -38,7 +38,7 @@ These are captures of the **actual Discord desktop app running the BetterDiscord
 | A finish that fits | Set your place |
 | :---: | :---: |
 | [![StillCord appearance settings](docs/previews/05-settings.png)](docs/previews/05-settings.png) | [![ZIP code and time-zone settings](docs/previews/06-location.png)](docs/previews/06-location.png) |
-| Four tidy settings tabs, with changes saved as you go. | One US ZIP code sets the forecast and the clock’s time zone. |
+| Tidy settings tabs, with changes saved as you go. | One US ZIP code sets the forecast and the clock’s time zone. |
 
 ## Install
 
@@ -55,7 +55,7 @@ Upgrading from Still / StillSpeed? StillCord imports the previous layout prefere
 ### Vencord desktop
 
 1. Prepare a [Vencord source build](https://docs.vencord.dev/installing/).
-2. Download the [Vencord release](https://github.com/ll2Rawll/StillCord/releases/tag/vencord-v3.1.0). Put its `stillCord` folder in `Vencord/src/userplugins/`.
+2. Download the [Vencord release](https://github.com/ll2Rawll/StillCord/releases/tag/vencord-v3.2.0). Put its `stillCord` folder in `Vencord/src/userplugins/`.
 3. Run `pnpm install --frozen-lockfile`, then `pnpm build` in the Vencord checkout. Install that build following Vencord's guide, restart Discord, and enable **StillCord**.
 
 [Full Vencord instructions](vencord/stillCord/README.md) · [Official custom-plugin guide](https://docs.vencord.dev/installing/custom-plugins/)
@@ -83,6 +83,25 @@ ZIP lookup saves only after a valid result. A failed lookup keeps the last worki
 - **Quiet identity** uses neutral names and avatars, subtle role markers, and small game/music indicators.
 - **Profile activity** is available from Browse’s More menu. **Apply** shares the activity; **Clear** removes StillCord’s custom activity. Saved drafts are not published automatically.
 
+## Restless · a little more life
+
+Open **StillCord settings → Restless** to switch on coordinated motion. Choose an original **Silk**, **Orbit**, or **Aurora** live background, then adjust its light color, intensity, and pace. Restless is optional and starts off on new installs.
+
+| Detail | Motion |
+| --- | --- |
+| Glass light | Soft pointer lighting across the panels. |
+| Liquid rims | A fine edge highlight on hovered cards. |
+| Soft entrances | Menus, panels, settings, and profiles ease into place. |
+| Message arrivals | New messages arrive gently without moving the conversation. |
+| Halo avatars | A small lift and a fine hover halo. |
+| Channel glide | Subtle feedback across channels, servers, and member rows. |
+| Touch ripples | Brief, contained rings on button presses. |
+| Composer aura | Soft edge light while you type. |
+| Living widgets | Hover lift and a breathing media icon during playback. |
+| Quiet depth | A little pointer-driven depth in the live canvas. |
+
+Each detail has its own switch. Restless pauses when Discord is hidden or a video uses fullscreen. **Follow system reduced motion** is on by default; switch it off if you want Restless to animate independently of your device preference. Typed text and scroll positions stay still.
+
 ## Optional Windows media controls
 
 The theme, navigation, clock, weather, inbox, and settings are included in both editions. Controlling Spotify, browsers, and other Windows media sessions uses a small optional local adapter.
@@ -95,7 +114,7 @@ The adapter listens only on `127.0.0.1` and uses a locally generated access key.
 
 ## Lightweight by design
 
-The canvas is static. Permanent panels avoid live blur. Wheel easing stops after it settles; reading transitions keep Discord’s scroll viewport stable. Clock updates happen once per minute, weather is cached for 15 minutes, and widget work pauses when hidden. Discord data uses local store listeners instead of a polling loop.
+The default canvas is static. Restless's optional live canvas moves three vector/gradient layers with CSS transforms and opacity; it needs no video, canvas render loop, or downloaded artwork. Pointer effects run only on input, and finite effects are capped and cleaned up. Permanent panels avoid live blur. Wheel easing stops after it settles; reading transitions keep Discord’s scroll viewport stable. Clock updates happen once per minute, weather is cached for 15 minutes, and widget work pauses when hidden. Discord data uses local store listeners instead of a polling loop.
 
 Actual smoothness still depends on Discord, the device, other plugins, and media on screen. Use **Motion → Low power finish** if you want fewer effects.
 
@@ -115,7 +134,7 @@ npm test
 npm run package
 ```
 
-`src/plugin.js`, `src/theme.css`, `src/settings.*`, and `src/location.js` are shared by both editions. `src/betterdiscord.js` and `src/vencord/` adapt the host APIs. `scripts/build.mjs` generates `StillCord.plugin.js` and the self-contained `vencord/stillCord/` userplugin folder. Edit the sources, not generated files. esbuild is a test dependency; Python 3 packages the release ZIPs.
+`src/plugin.js`, `src/theme.css`, `src/settings.*`, `src/restless.*`, and `src/location.js` are shared by both editions. `src/betterdiscord.js` and `src/vencord/` adapt the host APIs. `scripts/build.mjs` generates `StillCord.plugin.js` and the self-contained `vencord/stillCord/` userplugin folder. Edit the sources, not generated files. esbuild is a test dependency; Python 3 packages the release ZIPs.
 
 The release workflow validates both editions, builds and type-checks against the Vencord commit pinned in `release.json`, then publishes two separate tagged releases with checksums. Bump the version and release notes before publishing a new pair.
 

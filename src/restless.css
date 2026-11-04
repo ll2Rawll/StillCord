@@ -1,0 +1,76 @@
+/* Restless is opt-in. Three compositor layers are the only perpetual canvas work. */
+#still-restless-backdrop { display:none; position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; color:var(--sr-tint,#d3d9e4); background:var(--still-base); contain:strict; }
+html.sr-live #still-restless-backdrop { display:block; }
+html.sr-live :is(#app-mount,#app-mount [class^="app_"],[data-still-shell],[class^="bg_"]) { background:transparent!important; }
+html.sr-live :is([class*="contentRegion_"],[class*="contentRegionScroller_"],[class*="userSettingsContentPanel_"],[class*="pageBody_"],[class*="peopleColumn_"]) { background:rgb(8 9 12 / 52%)!important; }
+html.sr-live #app-mount { isolation:isolate; }
+.sr-depth-layer { position:absolute; inset:-2%; opacity:var(--sr-strength,.45); transition:transform 650ms cubic-bezier(.2,.75,.25,1); }
+.sr-field { position:absolute; inset:-10%; transform-origin:50% 50%; pointer-events:none; }
+.sr-field svg { width:100%; height:100%; display:block; }
+[data-scene="silk"] .sr-field-0 { animation:sr-silk-a var(--sr-cycle) ease-in-out infinite alternate; }
+[data-scene="silk"] .sr-field-1 { opacity:.7; rotate:180deg; animation:sr-silk-b calc(var(--sr-cycle)*1.3) ease-in-out infinite alternate; }
+[data-scene="silk"] .sr-field-2 { background:radial-gradient(ellipse at 80% 10%,color-mix(in srgb,currentColor 15%,transparent),transparent 55%); animation:sr-haze calc(var(--sr-cycle)*.8) ease-in-out infinite alternate; }
+[data-scene="orbit"] .sr-field { inset:12% 6%; border-radius:50%; border:1px solid color-mix(in srgb,currentColor 24%,transparent); background:radial-gradient(ellipse at 50% 0%,color-mix(in srgb,currentColor 18%,transparent),transparent 55%); animation:sr-orbit var(--sr-cycle) ease-in-out infinite alternate; }
+[data-scene="orbit"] .sr-field svg,[data-scene="aurora"] .sr-field svg { display:none; }
+[data-scene="orbit"] .sr-field-1 { inset:-18% 18%; rotate:24deg; animation-delay:-11s; opacity:.5; }
+[data-scene="orbit"] .sr-field-2 { inset:30% -25%; rotate:-32deg; animation-delay:-21s; opacity:.45; }
+[data-scene="aurora"] .sr-field { background:radial-gradient(ellipse at 35% 65%,color-mix(in srgb,currentColor 30%,transparent),transparent 52%); animation:sr-aurora var(--sr-cycle) ease-in-out infinite alternate; }
+[data-scene="aurora"] .sr-field-1 { rotate:145deg; animation-delay:-13s; opacity:.8; }
+[data-scene="aurora"] .sr-field-2 { rotate:55deg; animation-delay:-23s; opacity:.5; }
+@keyframes sr-silk-a { from {transform:translate3d(-3%,-5%,0) rotate(-7deg) scale(1.04);} to {transform:translate3d(3%,4%,0) rotate(5deg) scale(1.12);} }
+@keyframes sr-silk-b { from {transform:translate3d(3%,4%,0) rotate(3deg) scale(1.08);} to {transform:translate3d(-4%,-3%,0) rotate(-6deg) scale(1.02);} }
+@keyframes sr-haze { from {opacity:.35;transform:translate3d(-3%,0,0);} to {opacity:.8;transform:translate3d(3%,2%,0);} }
+@keyframes sr-orbit { from {transform:rotate(-13deg) scale(.94);} to {transform:rotate(14deg) scale(1.1);} }
+@keyframes sr-aurora { from {transform:translate3d(-8%,8%,0) scale(.98);} to {transform:translate3d(8%,-8%,0) scale(1.15);} }
+
+#still-restless-effects { position:fixed; inset:0; z-index:120; pointer-events:none; overflow:hidden; contain:strict; }
+.sr-hover-light { position:absolute; top:0; left:0; overflow:hidden; opacity:0; pointer-events:none; transition:opacity 180ms; }
+.sr-light-spot { width:320px; height:320px; background:radial-gradient(circle,color-mix(in srgb,var(--sr-tint) 10%,transparent),transparent 70%); }
+.sr-ripple-clip { position:absolute; overflow:hidden; pointer-events:none; }
+.sr-ripple { position:absolute; box-sizing:border-box; border:1px solid color-mix(in srgb,var(--sr-tint) 75%,transparent); border-radius:50%; background:radial-gradient(circle,transparent 25%,rgb(255 255 255 / 6%)); }
+
+/* Shared feedback reaches native Discord controls as well as StillCord. */
+html.still-restless:not(.sr-paused) :is(button,[role="button"],[role="tab"],input,select,[role="menuitem"],[role="menuitemcheckbox"]) { transition:opacity 150ms ease,background-color 170ms ease,border-color 170ms ease,scale 170ms cubic-bezier(.2,.75,.25,1)!important; }
+html.still-restless:not(.sr-paused) :is(button,[role="button"],[role="tab"]):active:not(:disabled):not([aria-disabled="true"]) { scale:.97; }
+
+/* 02 — Edge sheen stays local to a hovered card, with no full-screen blur. */
+html.sr-liquidrims :is(.still-widget,.sc-card) { position:relative; overflow:hidden; }
+html.sr-liquidrims :is(.still-widget,.sc-card)::after { content:""; position:absolute; top:0; left:0; width:52%; height:1px; background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--sr-tint) 80%,white),transparent); opacity:0; pointer-events:none; }
+html.sr-liquidrims:not(.sr-paused) :is(.still-widget,.sc-card):hover::after { animation:sr-rim 850ms ease-out both; }
+@keyframes sr-rim { 0% {opacity:0;transform:translateX(-100%);} 25% {opacity:.9;} 100% {opacity:0;transform:translateX(260%);} }
+
+/* 03 — Individual translate leaves Discord's positioning transforms intact. */
+html.sr-entrances:not(.sr-paused) :is([role="menu"],[role="dialog"],[class*="tooltip_"],.user-profile-popout,[class*="userProfileOuter_"],[class*="membersWrap_"],[class*="peopleColumn_"],[class*="contentRegion_"],[class*="searchResultsWrap_"],[class*="emojiPicker_"],[class*="stickerPicker_"],[class*="gifPicker_"],.still-browse-menu) { animation:sr-enter var(--sr-time) cubic-bezier(.2,.75,.25,1) backwards!important; }
+html.sr-entrances:not(.sr-paused) :is([role="menu"],[role="dialog"]) :is([role="menu"],[role="dialog"]) { animation:none!important; }
+@keyframes sr-enter { from {opacity:.35;translate:0 6px;} to {opacity:1;translate:0 0;} }
+
+/* 05 — Actual avatars stay in their native hit targets. */
+html.sr-avatars:not(.sr-paused) :is([class*="cozyMessage_"],[class*="member_"],[class*="userProfileOuter_"]) [class*="avatar_"] { transition:scale 220ms ease,box-shadow 220ms ease!important; }
+html.sr-avatars:not(.sr-paused) :is([class*="cozyMessage_"],[class*="member_"]):hover [class*="avatar_"],html.sr-avatars:not(.sr-paused) [class*="userProfileOuter_"] [class*="avatar_"]:hover { scale:1.055; box-shadow:0 0 0 2px var(--still-base),0 0 0 3px color-mix(in srgb,var(--sr-tint) 38%,transparent)!important; }
+
+/* 06 — Small translations, never row height or padding animations. */
+html.sr-navigation:not(.sr-paused) :is(.still-browse-row,[class*="sidebarList_"] [class*="link_"],[class*="privateChannels_"] [class*="interactive_"],[class*="members_"] [class*="member_"]) { transition:translate 200ms cubic-bezier(.2,.75,.25,1),background-color 180ms ease!important; }
+html.sr-navigation:not(.sr-paused) :is(.still-browse-row,[class*="sidebarList_"] [class*="link_"],[class*="privateChannels_"] [class*="interactive_"],[class*="members_"] [class*="member_"]):hover { translate:2px 0; }
+html.sr-navigation:not(.sr-paused) :is([class*="guilds_"] [class*="listItemWrapper_"],.still-browse-avatar) { transition:scale 220ms ease!important; }
+html.sr-navigation:not(.sr-paused) :is([class*="guilds_"] [class*="listItemWrapper_"],.still-browse-avatar):hover { scale:1.06; }
+
+/* 08 — Only the composer's decorative edge breathes; typed text stays still. */
+html.sr-composer [class*="channelTextArea_"] [class*="scrollableContainer_"] { position:relative; }
+html.sr-composer [class*="channelTextArea_"] [class*="scrollableContainer_"]::after { content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit; box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--sr-tint) 38%,transparent); opacity:0; transition:opacity 220ms; }
+html.sr-composer:not(.sr-paused) [class*="channelTextArea_"]:focus-within [class*="scrollableContainer_"]::after { animation:sr-breathe 3.6s ease-in-out infinite alternate; }
+@keyframes sr-breathe { from {opacity:.25;} to {opacity:.75;} }
+
+/* 09 — Hover motion and a playback indicator, never perpetual text bobbing. */
+html.sr-widgets:not(.sr-paused) .still-widget { transition:translate 240ms cubic-bezier(.2,.75,.25,1),border-color 240ms ease!important; }
+html.sr-widgets:not(.sr-paused) .still-widget:hover { translate:0 -3px; border-color:color-mix(in srgb,var(--sr-tint) 25%,transparent); }
+html.sr-widgets:not(.sr-paused) .still-widget[data-still-playing="true"] .still-media-icon svg { animation:sr-media 1.8s ease-in-out infinite alternate!important; }
+@keyframes sr-media { from {opacity:.45;scale:.93;} to {opacity:1;scale:1.04;} }
+
+/* Hidden windows, fullscreen video and OS reduced-motion stop decorative work. */
+html.sr-paused #still-restless-backdrop *,html.sr-paused .still-widget svg { animation-play-state:paused!important; }
+html.sr-paused #still-restless-effects { display:none; }
+html.sr-paused .sr-depth-layer { transition:none!important; }
+@media(prefers-reduced-motion:reduce) {
+    html.sr-system-motion #still-restless-backdrop * { animation:none!important; }
+    html.still-restless.sr-system-motion :is(button,[role="button"],[role="tab"],[role="menu"],[role="dialog"],.still-widget,.sc-card) { animation:none!important;transition:none!important; }
+}

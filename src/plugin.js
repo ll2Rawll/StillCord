@@ -1,7 +1,7 @@
 /**
  * @name StillCord
  * @author ll2Rawll
- * @version 3.1.0
+ * @version 3.2.0
  * @description An integrated OLED glass theme, minimal workspace, widgets and thoughtful motion.
  * @website https://github.com/ll2Rawll/StillCord
  * @source https://github.com/ll2Rawll/StillCord/blob/main/StillCord.plugin.js
@@ -16,6 +16,14 @@ const DEFAULTS = Object.freeze({
     starIntensity: "subtle",
     reduceMotion: true,
     microMotion: true,
+    restless: false,
+    restlessLive: true,
+    restlessScene: "silk",
+    restlessTint: "#d3d9e4",
+    restlessStrength: 45,
+    restlessTempo: "balanced",
+    restlessRespectMotion: true,
+    ...Object.fromEntries(STILL_RESTLESS_FEATURES.map(([key]) => [key, true])),
     readingMode: true,
     smoothWheel: true,
     mouseWheelMode: true,
@@ -79,6 +87,10 @@ function normalizedSettings(saved) {
     if (Object.hasOwn(STAR_VEILS, saved.starIntensity)) next.starIntensity = saved.starIntensity;
     if (["satin", "stars"].includes(saved.backgroundStyle)) next.backgroundStyle = saved.backgroundStyle;
     if (typeof saved.accent === "string" && /^#[0-9a-f]{6}$/i.test(saved.accent)) next.accent = saved.accent;
+    if (["silk", "orbit", "aurora"].includes(saved.restlessScene)) next.restlessScene = saved.restlessScene;
+    if (["calm", "balanced", "vivid"].includes(saved.restlessTempo)) next.restlessTempo = saved.restlessTempo;
+    if (typeof saved.restlessTint === "string" && /^#[0-9a-f]{6}$/i.test(saved.restlessTint)) next.restlessTint = saved.restlessTint;
+    if (Number.isFinite(saved.restlessStrength)) next.restlessStrength = Math.round(Math.max(15, Math.min(85, saved.restlessStrength)));
     for (const key of Object.keys(DEFAULTS)) {
         if (typeof DEFAULTS[key] === "boolean" && typeof saved[key] === "boolean") next[key] = saved[key];
     }
@@ -117,6 +129,7 @@ class StillCord {
             this.reader?.visibilityChanged();
             this.messageGroups?.schedule();
             this.browser?.sync();
+            this.restless?.visibilityChanged();
         };
         this.running = true;
         try {
@@ -134,6 +147,7 @@ class StillCord {
         this.running = false;
         this.locationAbort?.abort(); this.locationAbort = null;
         this.closeSettings?.();
+        this.restless?.destroy(); this.restless = null;
         this.unmountLayout();
         this.activity?.destroy();
         this.activity = null;
@@ -190,7 +204,7 @@ class StillCord {
         `);
 
         const css = [];
-        if (s.reduceMotion) css.push(`
+        if (s.reduceMotion && !s.restless) css.push(`
             :is(${UI_MOTION}) { transition-duration: 0s !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
             [class*="scroller_"], [class*="scrollerBase_"] { scroll-behavior: auto !important; }
         `);
@@ -224,7 +238,7 @@ class StillCord {
                 transition: none !important;
             }
         `);
-        if (s.microMotion) css.push(`
+        if (s.microMotion && !s.restless) css.push(`
             @keyframes stillspeed-appear { from { opacity: .78; } to { opacity: 1; } }
             @media (prefers-reduced-motion: no-preference) {
                 :root :is(${FLOATING_SURFACES}) {
@@ -259,6 +273,13 @@ class StillCord {
         if (s.hideActivity) css.push(`[class*="nowPlayingColumn_"], [class*="nowPlayingSidebar_"] { display: none !important; }`);
         this.setStyle("stillspeed-performance", css.join("\n"));
         this.mountLayout();
+        this.syncRestless();
+    }
+
+    syncRestless() {
+        if (!this.settings.restless) { this.restless?.destroy(); this.restless = null; return; }
+        if (!this.restless) this.restless = new StillRestless(this);
+        this.restless.sync();
     }
 
     onSwitch() {
@@ -358,7 +379,7 @@ class StillCord {
             this.workspace = new StillWorkspace(this);
             this.browser = new StillBrowse(this);
             this.reader = messages && composer ? new StillReader(this) : null;
-            this.messageGroups = messages ? new StillMessageGroups(messages, () => { this.workspace?.scheduleCaption(); this.reader?.scheduleLayout(); }, () => this.reader?.sync()) : null;
+            this.messageGroups = messages ? new StillMessageGroups(messages, () => { this.workspace?.scheduleCaption(); this.reader?.scheduleLayout(); }, () => this.reader?.sync(), rows => this.restless?.messagesAdded(rows)) : null;
             // Watch structural child lists, including Discord's live wrappers.
             // Never observe the message list, its subtree, or attributes.
             this.shellObserver = new MutationObserver(records => {
@@ -402,6 +423,7 @@ class StillCord {
         if (open) this.workspace?.fitBrowse();
         this.browser?.sync();
         this.workspace?.scheduleCaption();
+        if (open) this.restless?.enter(this.sidebar);
     }
 
     setAuxiliary(mode) {
@@ -413,6 +435,7 @@ class StillCord {
         if (this.auxiliary === next) return;
         this.auxiliary = next;
         this.workspace?.sync();
+        this.restless?.enter(next === "activity" ? this.workspace?.activityView?.root : next === "tools" ? this.header : null);
     }
 
     closeAuxiliary() {
@@ -456,6 +479,7 @@ class StillCord {
         if (next[key] === this.settings[key]) return;
         this.settings = next;
         this.api.Data.save("settings", this.settings);
+        if (key.startsWith("restless") && key !== "restless") { this.syncRestless(); return; }
         if (["customLayout", "focusView", "pinNavigation", "movableBrowse", "activityEditor", "widgets", "clockWidget", "weatherWidget", "mediaWidget", "notificationsWidget", "fahrenheit", "clock24", "zipTime"].includes(key)) this.mountLayout();
         else this.apply();
     }
@@ -489,6 +513,7 @@ class StillCord {
         dialog.addEventListener("cancel", event => { event.preventDefault(); this.closeSettings?.(); });
         dialog.addEventListener("click", event => { if(event.target===dialog){const box=dialog.getBoundingClientRect();if(event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)this.closeSettings?.();} });
         dialog.append(close, this.getSettingsPanel()); document.body.append(dialog); this.settingsDialog=dialog; dialog.showModal();
+        this.restless?.enter(dialog);
     }
 };
 
@@ -1102,11 +1127,12 @@ class StillReader {
 }
 
 class StillMessageGroups {
-    constructor(root, onViewportChange, onStructureChange) {
+    constructor(root, onViewportChange, onStructureChange, onNewRows) {
         this.root = root;
         this.viewport = root.parentElement;
         this.onViewportChange = onViewportChange;
         this.onStructureChange = onStructureChange;
+        this.onNewRows = onNewRows;
         this.alive = true;
         this.rows = new Set();
         this.surfaces = new Map();
@@ -1174,6 +1200,11 @@ class StillMessageGroups {
             else if (!part) row.removeAttribute("data-still-sequence");
             if (rows.has(row) && !this.rows.has(row)) this.resize.observe(row);
             if (!rows.has(row)) this.resize.unobserve(row);
+        }
+        const oldLast = [...this.rows].at(-1), ordered = [...rows];
+        if (oldLast && rows.has(oldLast)) {
+            const added = ordered.slice(ordered.indexOf(oldLast) + 1).filter(row => !this.rows.has(row));
+            if (added.length) this.onNewRows?.(added);
         }
         this.rows = rows;
         this.groups = connected;
@@ -1266,6 +1297,7 @@ class StillWorkspace {
             this.collapsed = !this.collapsed;
             this.api.Data.save("widgetsCollapsed", this.collapsed);
             this.sync();
+            if (!this.collapsed) this.plugin.restless?.enter(this.dock);
         });
         this.toggle.id = "stillspeed-widget-toggle";
         this.toggle.style.display = "none";
@@ -1588,6 +1620,7 @@ class StillWorkspace {
     renderMedia() {
         if (!this.mediaUI) return;
         const ui = this.mediaUI, m = this.media;
+        stillAttribute(ui.toggle.closest(".still-widget"), "data-still-playing", Boolean(m.available && m.playing));
         const source = String(m.source || "").toLowerCase();
         ui.source.textContent = !m.available ? "Windows" : source.includes("spotify") ? "Spotify" : source.includes("chrome") ? "Chrome" : source.includes("msedge") ? "Edge" : source.includes("firefox") ? "Firefox" : "Windows";
         ui.title.textContent = m.available ? String(m.title || "Media playing").slice(0, 300) : m.error || "Nothing playing";

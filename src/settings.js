@@ -5,12 +5,12 @@ function stillSettingsPanel(plugin) {
     const root=el('section','stillcord-settings'); root.setAttribute('aria-label','StillCord settings');
     const header=el('header','sc-settings-header'), mark=el('span','sc-mark','S'); mark.setAttribute('aria-hidden','true');
     const brand=el('div');brand.append(el('div','sc-eyebrow','YOUR DISCORD, QUIETLY REFINED'),el('h2','','StillCord'));
-    header.append(mark,brand,el('span','sc-version','3.1'));root.append(header);
+    header.append(mark,brand,el('span','sc-version','3.2'));root.append(header);
     root.append(el('p','sc-settings-intro','A little less noise. A little more you.'));
     const tabs=el('div','sc-tabs');tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','Settings category');root.append(tabs);
     const panels=new Map(),buttons=[];
     const activate=(key,focus=false)=>{for(const [name,panel] of panels){const active=name===key;panel.hidden=!active;const button=buttons.find(b=>b.dataset.page===name);button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;if(active&&focus)button.focus();}};
-    for(const [key,title] of [['appearance','Appearance'],['layout','Layout'],['widgets','Widgets & location'],['motion','Motion']]){
+    for(const [key,title] of [['appearance','Appearance'],['layout','Layout'],['widgets','Widgets & location'],['motion','Motion'],['restless','Restless']]){
         const button=el('button','sc-tab',title);button.type='button';button.dataset.page=key;button.id=`${id}-${key}-tab`;button.setAttribute('role','tab');button.setAttribute('aria-controls',`${id}-${key}`);
         button.addEventListener('click',()=>activate(key));buttons.push(button);tabs.append(button);
         const panel=el('div','sc-tab-panel');panel.id=`${id}-${key}`;panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby',button.id);panels.set(key,panel);root.append(panel);
@@ -75,6 +75,33 @@ function stillSettingsPanel(plugin) {
     toggle(performance,'efficientGlass','Lightweight glass','Static gloss on permanent panels.');
     toggle(performance,'reduceEffects','Low power finish','Remove extra shadows and blur.');
     toggle(performance,'pauseDecorations','Quiet decorations','Hide decorative profile effects.');
+    const restless=card('restless','Restless','Your familiar space, with a little life in every interaction.');
+    restless.classList.add('sc-restless-hero');
+    const art=el('div','sc-restless-art');art.setAttribute('aria-hidden','true');
+    art.append(el('i'),el('i'),el('i'));restless.prepend(art,el('span','sc-eyebrow','MOTION, IN BALANCE'));
+    toggle(restless,'restless','Enable Restless','Coordinated motion throughout Discord. Switch off to return to your usual finish.');
+    const canvas=card('restless','Live canvas','Original moving artwork. Quiet by default, yours to customize.');
+    toggle(canvas,'restlessLive','Live background','Slow light and depth behind your conversations.');
+    const scenes=el('fieldset','sc-scenes'),legend=el('legend','sc-setting-name','Scene');scenes.append(legend);
+    for(const [value,title,note] of [['silk','Silk','Flowing silver folds'],['orbit','Orbit','Soft orbital light'],['aurora','Aurora','Drifting light fields']]){
+        const label=el('label','sc-scene'),input=el('input');input.type='radio';input.name=`${id}-scene`;input.value=value;input.checked=plugin.settings.restlessScene===value;
+        input.setAttribute('aria-label',title);input.addEventListener('change',()=>{if(input.checked)plugin.update('restlessScene',value);});
+        const swatch=el('span',`sc-scene-art sc-scene-${value}`);swatch.setAttribute('aria-hidden','true');swatch.append(el('i'),el('i'));
+        label.append(input,swatch,el('span','sc-scene-title',title),el('span','sc-setting-note',note));scenes.append(label);
+    }
+    canvas.append(scenes);
+    const tint=el('input','sc-color');tint.type='color';tint.value=plugin.settings.restlessTint;tint.addEventListener('change',()=>plugin.update('restlessTint',tint.value));row(canvas,'restlessTint','Light color','Silver, or a color of your own.',tint);
+    const strength=el('input','sc-range');strength.type='range';strength.min='15';strength.max='85';strength.step='1';strength.value=plugin.settings.restlessStrength;
+    strength.setAttribute('aria-valuetext',`${strength.value}%`);strength.addEventListener('input',()=>strength.setAttribute('aria-valuetext',`${strength.value}%`));strength.addEventListener('change',()=>plugin.update('restlessStrength',Number(strength.value)));
+    row(canvas,'restlessStrength','Light intensity','Keep it subtle, or bring the artwork forward.',strength);
+    select(canvas,'restlessTempo','Pace','Background drift and panel arrivals.',[['calm','Calm'],['balanced','Balanced'],['vivid','Lively']]);
+    toggle(canvas,'restlessRespectMotion','Follow system reduced motion','Keep Restless still when your device requests less animation. Turn off to control motion here.');
+    const effects=card('restless','Ten small wonders','Keep them all, or tune each detail.');
+    for(const [index,feature] of STILL_RESTLESS_FEATURES.entries()){
+        const control=toggle(effects,...feature);control.parentElement.dataset.effect=String(index+1).padStart(2,'0');
+    }
+    effects.classList.add('sc-restless-features');
+    panels.get('restless').append(el('p','sc-privacy','Restless pauses when Discord is hidden or a video is full screen. System reduced motion is followed by default and can be changed above.'));
     const footer=el('footer','sc-settings-footer');footer.append(el('span','','Changes save automatically.'));
     const reset=el('button','sc-text-button','Reset preferences');reset.type='button';let armed=false;
     reset.addEventListener('click',()=>{if(!armed){armed=true;reset.textContent='Confirm reset';return;}plugin.settings={...DEFAULTS};plugin.api.Data.save('settings',plugin.settings);plugin.apply();root.replaceWith(stillSettingsPanel(plugin));});footer.append(reset);root.append(footer);
